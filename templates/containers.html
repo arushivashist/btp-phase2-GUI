@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-center">Docker Monitoring Tool</h1>
+  <div class="row">
+    <div class="col-lg-2">
+      <h3>Id</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>Name</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>Image</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>Status</h3>
+    </div>
+  </div>
+  <hr>
+  <div id="containerInfo">
+  </div>
+  <script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+      setInterval(function() {
+        socket.emit('req_api_containers');
+      },3000);
+    });
+    function addContInfo(width, elemCont, data) {
+        var dataCont = document.createElement("div");
+        dataCont.className = "col-lg-" + width;
+        var dataInfo = document.createElement("h4");
+        dataInfo.textContent = data;
+        dataCont.appendChild(dataInfo);
+        elemCont.appendChild(dataCont);
+    }
+    function stopCont() {
+      socket.emit('req_api_stop_container', {contId: this.id});
+    }
+    function createStopDiv(elemCont, contId) {
+      var dataCont = document.createElement("div");
+      dataCont.className = "col-lg-1";
+      dataCont.id = contId;
+      dataCont.onclick = stopCont;
+      var dataInfo = document.createElement("a");
+      dataInfo.className = "btn btn-danger";
+      dataInfo.text = "Stop";
+      dataCont.appendChild(dataInfo);
+      elemCont.appendChild(dataCont);
+    }
+    socket.on('resp_api_containers', function(data) {
+      $("#containerInfo").empty();
+      for(var i=0; i<data.length; i++) {
+        var elemCont = document.createElement("div");
+        elemCont.className = "row";
+        addContInfo(2, elemCont, data[i]["Id"].substr(0, 8));
+        addContInfo(3, elemCont, data[i]["Names"][0]);
+        addContInfo(3, elemCont, data[i]["Image"]);
+        addContInfo(3, elemCont, data[i]["Status"]);
+        createStopDiv(elemCont, data[i]["Id"]);
+        $("#containerInfo").append(elemCont);
+        console.log(data[i]);
+      }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Image</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cont in resp %}
+        <tr>
+          <td>{{ cont.Id }}</td>
+          <td>{{ cont.Names[0] }}</td>
+          <td>{{ cont.Image }}</td>
+          <td>{{ cont.Status }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+      socket.emit('my event', {data: 'I\'m connected!'});
+      console.log("Hello");
+    });
+    socket.on('my resp', function(data) {
+      console.log(data);
+    });
+</script>
+{% endblock %}
