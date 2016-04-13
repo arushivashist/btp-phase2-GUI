@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-center">Docker Monitoring Tool</h1>
+  <div class="row">
+    <div class="col-lg-2">
+      <h3>{{ cont['Name'] }}</h3>
+    </div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-lg-6 col-lg-offset-3">
+      <h3>Input</h3>
+      <input class="form-control" id="ptyin"></input>
+      <h3>Output</h3>
+      <textarea class="form-control" rows=10 id="ptyout"></textarea>
+    </div>
+  </div>
+  <script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+      console.log("connected");
+      $("#ptyin").val(">>> ");
+    });
+    $("#ptyin").keyup(function(event) {
+      if(event.keyCode == 13) {
+        cmd = $("#ptyin").val();
+	cmd = cmd.substring(4, cmd.length);
+        $("#ptyin").val(">>> ");
+        socket.emit('req_api_container_pty', {cmd: cmd, cont_id: "{{ cont['Id'] }}"});
+        console.log(cmd);
+      }
+    });
+    socket.on('resp_api_container_pty', function(data) {
+      console.log(data);
+      $("#ptyout").val(data);
+    });
+</script>
+{% endblock %}

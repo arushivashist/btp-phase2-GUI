@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-center">Docker Monitoring Tool</h1>
+  <div class="row">
+    <div class="col-lg-2">
+      <h3>Id</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>RepoTag</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>VirtualSize</h3>
+    </div>
+    <div class="col-lg-3">
+      <h3>Created</h3>
+    </div>
+  </div>
+  <hr>
+  <div id="imageInfo">
+  </div>
+  <script type="text/javascript" charset="utf-8">
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function() {
+      setInterval(function() {
+        socket.emit('req_api_images');
+      }, 3000);
+    });
+    function addImageInfo(width, elemCont, data) {
+      var dataCont = document.createElement("div");
+      dataCont.className = "col-lg-" + width;
+      var dataInfo = document.createElement("h4");
+      dataInfo.textContent = data;
+      dataCont.appendChild(dataInfo);
+      elemCont.appendChild(dataCont);
+    }
+    function startCont() {
+      socket.emit('req_api_start_container', {contName: this.name});
+    }
+
+    function createStartDiv(elemCont, contName) {
+      var dataCont = document.createElement("div");
+      dataCont.className = "col-lg-1";
+      dataCont.name = contName;
+      dataCont.onclick = startCont;
+      var dataInfo = document.createElement("a");
+      dataInfo.className = "btn btn-danger";
+      dataInfo.text = "Start";
+      dataCont.appendChild(dataInfo);
+      elemCont.appendChild(dataCont);
+    }
+
+    function bytesToSize(bytes) {
+      var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+      if (bytes == 0) return '0 Byte';
+      var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+      return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+    }
+    socket.on('resp_api_images', function(data) {
+      $("#imageInfo").empty();
+      for(var i=0; i<data.length; i++) {
+        var elemCont = document.createElement("div");
+        elemCont.className = "row";
+        addImageInfo(2, elemCont, data[i]["Id"].substr(0, 8));
+        addImageInfo(3, elemCont, data[i]["RepoTags"][0]);
+        addImageInfo(3, elemCont, bytesToSize(data[i]["VirtualSize"]));
+        addImageInfo(3, elemCont, new Date(data[i]["Created"]*1000));
+        createStartDiv(elemCont, data[i]["RepoTags"][0]);
+        $("#imageInfo").append(elemCont);
+      }
+      console.log(data[0]);
+    });
+</script>
+{% endblock %}
